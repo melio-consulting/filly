@@ -15,9 +15,9 @@ import os
 import boto3
 import logging
 from tqdm import tqdm
+from .log import setup_custom_logger
 
-logger = logging.getLogger('filly.s3')
-
+logger = setup_custom_logger(__name__)
 
 class S3:
 

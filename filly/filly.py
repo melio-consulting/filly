@@ -13,6 +13,7 @@ import subprocess
 from tqdm import tqdm
 import pandas as pd
 from .s3 import S3
+from .log import setup_custom_logger
 
 class FileUploadError(Exception):
     def __init__(self, filename, filepath, message=None):
@@ -53,7 +54,7 @@ class Filly():
             Add chunking, progress bar and all that goodness for read/write pandas
         """
 
-        self.logger = logging.getLogger('filly')
+        self.logger = setup_custom_logger(__name__)
         self.remote = remote
 
         if self.remote not in ['s3', 'hdfs', None]:
@@ -215,6 +216,8 @@ class Filly():
 
         with open(self.fullpath, 'w') as results_file:
             results_file.write(data)
+
+        self.logger.info('Results written to {self.fullpath}')
 
     def read_input(self, filename=None, filepath=None, fullpath=None):
 
