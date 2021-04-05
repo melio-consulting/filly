@@ -184,17 +184,19 @@ def test_json_handler(filename, filepath, mode):
 
 
 @pytest.mark.parametrize(
-    "filename, filepath, data",
+    "filename, filepath, fullpath, data",
     [
-        ('tmp', 'tests/data/', 'true')
+        ('tmp', 'tests/data/', 'tests/data/tmp', 'true'),
+        (None, None, 'tests/data/tmp', 'true')
     ]
 )
-def test_write_output(filename, filepath, data):
+def test_write_output(filename, filepath, fullpath, data):
 
-    file_handler = Filly().write_output(data=data, filepath=filepath, filename=filename)
+    file_handler = Filly()
+    file_handler.write_output(data=data, filepath=filepath, filename=filename, fullpath=fullpath)
 
     output = ''
-    with open(os.path.join(filepath, filename), 'r') as results_file:
+    with open(fullpath, 'r') as results_file:
         for line in results_file:
             output += line
 

@@ -93,7 +93,7 @@ class Filly():
 
         return s_return, s_output, s_err
 
-    def write_data(self, filepath, filename, data, fullpath=None):
+    def write_data(self, data, filepath=None, filename=None, fullpath=None):
 
         self.__set_path(filepath, filename, fullpath)
 
@@ -111,7 +111,7 @@ class Filly():
         else:
             raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
 
-    def read_data(self, filepath, filename, fullpath=None):
+    def read_data(self, filepath=None, filename=None, fullpath=None):
 
         self.__set_path(filepath, filename, fullpath)
 
@@ -204,21 +204,19 @@ class Filly():
             data.to_pickle(self.fullpath)
             self.logger.info(f'Pandas data saved at {self.fullpath}')
 
-    def write_output(self, data, filename=None, filepath=None):
+    def write_output(self, data, filename=None, filepath=None, fullpath=None):
 
-        opath = os.path.join(filepath, filename)
+        self.__set_path(filepath, filename, fullpath)
 
-        opath = self.fullpath if filename is None else os.path.join(filepath, filename)
-
-        with open(opath, 'w') as results_file:
+        with open(self.fullpath, 'w') as results_file:
             results_file.write(data)
 
-    def read_input(self, filename=None, filepath=None):
+    def read_input(self, filename=None, filepath=None, fullpath=None):
 
         output = ''
-        ipath = self.fullpath if filename is None else os.path.join(filepath, filename)
+        self.__set_path(filepath, filename, fullpath)
 
-        with open(ipath, 'r') as results_file:
+        with open(self.fullpath, 'r') as results_file:
             for line in results_file:
                 output += line
 
