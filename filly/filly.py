@@ -31,7 +31,7 @@ class FileUploadError(Exception):
 class Filly():
     """A class to read and write various data types"""
 
-    def __init__(self, filename=None, filepath='./', mode=None, data=None, remote=None, bucket_name=None):
+    def __init__(self, filename=None, filepath='./', data=None, remote=None, bucket_name=None):
         """Class to handle the reading, writing, transpose and syncing of various file types
 
         Arguments:
@@ -61,39 +61,16 @@ class Filly():
 
         self.logger = logging.getLogger('filly')
         self.__set_path(filepath, filename)
+        self.remote = remote
 
-        if filename is not None:
-            if mode not in ['r', 'w', None]:
-                raise ValueError(f'Invalid mode {mode}. mode can only be "r" or "w"')
-            self.data = None if mode == 'r' else 'Data only available in "r" mode.'
+        if remote not in ['s3', 'hdfs', None]:
+            raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
 
-            if remote == 's3':
+        if remote == 's3':
+            if bucket_name not in [None, '']:
                 self.s3 = S3(bucket=bucket_name)
-
-            if mode == 'r':
-                if remote == 'hdfs':
-                    self.download_from_hdfs(hdfs_dir)
-                elif remote == 's3':
-                    self.s3.get_from_s3(filepath, filepath, filename)
-                elif remote is None:
-                    pass
-                else:
-                    raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
-
-            self.read_or_write(mode, data)
-
-            if mode == 'w':
-                if not os.path.exists(filepath):
-                    os.makedirs(filepath, exist_ok=True)
-
-                if remote == 'hdfs':
-                    self.upload_to_hdfs(hdfs_dir)
-                elif remote == 's3':
-                    self.s3.put_to_s3(filepath, filepath, filename)
-                elif remote is None:
-                    pass
-                else:
-                    raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
+            else:
+                raise ValueError(f'Please supply your s3 bucket name.')
 
     def __set_path(self, filepath, filename):
         if filename is not None:
@@ -111,7 +88,40 @@ class Filly():
 
         return s_return, s_output, s_err
 
-    def upload_to_hdfs(self, hdfs_dir):
+    def write_data(self, filepath, filename, data):
+
+        self.__set_path(filepath, filename)
+
+        if not os.path.exists(filepath):
+            os.makedirs(filepath, exist_ok=True)
+
+        self._read_or_write(mode='w', data=data)
+
+        if remote == 'hdfs':
+            self._upload_to_hdfs(hdfs_dir)
+        elif remote == 's3':
+            self.s3.put_to_s3(filepath, filepath, filename)
+        elif remote is None:
+            pass
+        else:
+            raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
+
+    def read_data(self, filepath, filename):
+
+        self.__set_path(filepath, filename)
+
+        # Download data if it is in a remote location
+        if self.remote == 'hdfs':
+            self._download_from_hdfs(hdfs_dir)
+        elif self.remote == 's3':
+            self.s3.get_from_s3(filepath, filepath, filename)
+        else:
+            pass;
+
+        self._read_or_write(mode='r', data=None)
+
+
+    def _upload_to_hdfs(self, hdfs_dir):
         """Upload local file to HDFS, replace if exists."""
 
         ret, _, err = self.__run_cmd(['hdfs', 'dfs', '-test', '-e', hdfs_dir])
@@ -126,7 +136,7 @@ class Filly():
         else:
             self.logger.info(f'File {self.fullpath} uploaded successfully to {hdfs_dir}.')
 
-    def download_from_hdfs(self, hdfs_dir):
+    def _download_from_hdfs(self, hdfs_dir):
         """Upload local file to HDFS, replace if exists."""
 
         if os.path.isfile(self.fullpath):
@@ -140,25 +150,25 @@ class Filly():
         else:
             self.logger.info(f'File {self.fullpath} downloaded successfully from {hdfs_dir}.')
 
-    def read_or_write(self, mode, data):
+    def _read_or_write(self, mode, data):
         """Define file handler to read or write the data based on input mode"""
 
         file_extension = Path(self.filename).suffix
 
         if bool(mode):
             if file_extension == '.json':
-                self.json_handler(mode, data)
+                self._json_handler(mode, data)
 
             elif file_extension == '.csv':
-                self.csv_handler(mode, data)
+                self._csv_handler(mode, data)
 
             elif file_extension in ['.pkl', '.pickle']:
-                self.pickle_handler(mode, data)
+                self._pickle_handler(mode, data)
 
             else:
                 raise TypeError('File type: {file_extension} not supported')
 
-    def json_handler(self, mode, data):
+    def _json_handler(self, mode, data):
         """Either read json data as dictionary, or save dictionary as json"""
 
         if mode == 'r':
@@ -169,7 +179,7 @@ class Filly():
                 json.dump(data, json_file)
             self.logger.info(f'Json data saved at {self.fullpath}')
 
-    def csv_handler(self, mode, data):
+    def _csv_handler(self, mode, data):
         """Either read csv as pandas dataframe, or write pandas dataframe as csv"""
 
         if mode == 'r':
@@ -179,7 +189,7 @@ class Filly():
             data.to_csv(self.fullpath, index=False)
             self.logger.info(f'Pandas data saved at {self.fullpath}')
 
-    def pickle_handler(self, mode, data):
+    def _pickle_handler(self, mode, data):
         """Either read pickle as pandas dataframe, or write pickle dataframe as csv"""
 
         if mode == 'r':

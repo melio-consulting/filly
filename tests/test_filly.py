@@ -51,13 +51,26 @@ def test_file_upload_error(filename, filepath, to_raise, expected_raises):
         with expected_raises:
             raise FileUploadError(filename, filepath)
 
-def test_mode():
+@pytest.mark.parametrize(
+    "remote, bucket_name", [
+        ('s3', None),
+        ('s3', '')
+    ]
+)
+def test_remote(remote, bucket_name):
     with pytest.raises(ValueError):
         Filly(
-            filename='test_json_read.json',
-            filepath='tests/data/',
-            mode=1
+            remote=remote,
+            bucket_name=bucket_name
         )
+
+# def test_mode():
+#     with pytest.raises(ValueError):
+#         Filly(
+#             filename='test_json_read.json',
+#             filepath='tests/data/',
+#             mode=1
+#         )
 
 def test_read_or_write():
     with pytest.raises(TypeError):
@@ -84,10 +97,10 @@ def test_csv_handler(filename, filepath, mode):
 
     if mode == 'w':
         try:
-            file_handler = Filly(
+            file_handler = Filly()
+            file_handler.write_data(
                 filename=filename,
                 filepath=filepath,
-                mode=mode,
                 data=dict1
             )
             dict2 = pd.read_csv(open(os.path.join(filepath, filename), 'r'))
@@ -99,7 +112,8 @@ def test_csv_handler(filename, filepath, mode):
 
     elif mode == 'r':
 
-        file_handler = Filly(filename=filename, filepath=filepath, mode=mode)
+        file_handler = Filly(remote=None)
+        file_handler.read_data(filename=filename, filepath=filepath)
         assert_frame_equal(file_handler.data, dict1)
 
 @pytest.mark.parametrize(
@@ -123,10 +137,10 @@ def test_pickle_handler(filename, filepath, mode):
 
     if mode == 'w':
         try:
-            file_handler = Filly(
+            file_handler = Filly()
+            file_handler.write_data(
                 filename=filename,
                 filepath=filepath,
-                mode=mode,
                 data=dict1
             )
             dict2 = pd.read_csv(open(os.path.join(filepath, filename), 'r'))
@@ -138,7 +152,8 @@ def test_pickle_handler(filename, filepath, mode):
 
     elif mode == 'r':
 
-        file_handler = Filly(filename=filename, filepath=filepath, mode=mode)
+        file_handler = Filly(remote=None)
+        file_handler.read_data(filename=filename, filepath=filepath)
         assert_frame_equal(file_handler.data, dict1)
 
 @pytest.mark.parametrize(
@@ -154,10 +169,10 @@ def test_json_handler(filename, filepath, mode):
 
     if mode == 'w':
         try:
-            file_handler = Filly(
+            file_handler = Filly()
+            file_handler.write_data(
                 filename=filename,
                 filepath=filepath,
-                mode=mode,
                 data=dict1
             )
             dict2 = json.loads(open(os.path.join(filepath, filename), 'r').read())
@@ -169,7 +184,8 @@ def test_json_handler(filename, filepath, mode):
 
     elif mode == 'r':
 
-        file_handler = Filly(filename=filename, filepath=filepath, mode=mode)
+        file_handler = Filly(remote=None)
+        file_handler.read_data(filename=filename, filepath=filepath)
         assert file_handler.data == dict1
 
 

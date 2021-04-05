@@ -3,6 +3,7 @@
 .DS_Store
 .editorconfig
 aws/*
+tests/data/tmp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
