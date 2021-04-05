@@ -64,14 +64,6 @@ def test_remote(remote, bucket_name):
             bucket_name=bucket_name
         )
 
-# def test_mode():
-#     with pytest.raises(ValueError):
-#         Filly(
-#             filename='test_json_read.json',
-#             filepath='tests/data/',
-#             mode=1
-#         )
-
 def test_read_or_write():
     with pytest.raises(TypeError):
         Filly(
@@ -81,13 +73,14 @@ def test_read_or_write():
         )
 
 @pytest.mark.parametrize(
-    "filename, filepath, mode",
+    "filename, filepath, fullpath, mode",
     [
-        ('test_csv.csv', 'tests/data/', 'w'),
-        ('test_csv_read.csv', 'tests/data/', 'r')
+        ('test_csv.csv', 'tests/data/', None, 'w'),
+        ('test_csv_read.csv', 'tests/data/', None, 'r'),
+        (None, None, 'tests/data/test_csv_read.csv', 'r')
     ]
 )
-def test_csv_handler(filename, filepath, mode):
+def test_csv_handler(filename, filepath, fullpath, mode):
 
     dict1 = pd.DataFrame({
         "A": [0,0,0],
@@ -101,6 +94,7 @@ def test_csv_handler(filename, filepath, mode):
             file_handler.write_data(
                 filename=filename,
                 filepath=filepath,
+                fullpath=fullpath,
                 data=dict1
             )
             dict2 = pd.read_csv(open(os.path.join(filepath, filename), 'r'))
@@ -113,7 +107,7 @@ def test_csv_handler(filename, filepath, mode):
     elif mode == 'r':
 
         file_handler = Filly(remote=None)
-        file_handler.read_data(filename=filename, filepath=filepath)
+        file_handler.read_data(filename=filename, filepath=filepath, fullpath=fullpath)
         assert_frame_equal(file_handler.data, dict1)
 
 @pytest.mark.parametrize(

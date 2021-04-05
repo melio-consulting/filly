@@ -72,7 +72,12 @@ class Filly():
             else:
                 raise ValueError(f'Please supply your s3 bucket name.')
 
-    def __set_path(self, filepath, filename):
+    def __set_path(self, filepath, filename, fullpath=None):
+        if fullpath is not None:
+            self.fullpath = fullpath
+            self.filepath = os.path.dirname(fullpath)
+            self.filename = os.path.basename(fullpath)
+
         if filename is not None:
             self.filename = filename
             if filepath is not None:
@@ -88,9 +93,9 @@ class Filly():
 
         return s_return, s_output, s_err
 
-    def write_data(self, filepath, filename, data):
+    def write_data(self, filepath, filename, data, fullpath=None):
 
-        self.__set_path(filepath, filename)
+        self.__set_path(filepath, filename, fullpath)
 
         if not os.path.exists(filepath):
             os.makedirs(filepath, exist_ok=True)
@@ -106,9 +111,9 @@ class Filly():
         else:
             raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
 
-    def read_data(self, filepath, filename):
+    def read_data(self, filepath, filename, fullpath=None):
 
-        self.__set_path(filepath, filename)
+        self.__set_path(filepath, filename, fullpath)
 
         # Download data if it is in a remote location
         if self.remote == 'hdfs':
