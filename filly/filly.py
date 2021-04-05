@@ -106,17 +106,18 @@ class Filly():
         else:
             raise ValueError(f'Invalid remote {self.remote}. Only `hdfs` or `s3` are supported.')
 
-    def read_data(self, filepath=None, filename=None, fullpath=None):
+    def read_data(self, filepath=None, filename=None, fullpath=None, download=True):
 
         self.__set_path(filepath, filename, fullpath)
 
-        # Download data if it is in a remote location
-        if self.remote == 'hdfs':
-            self._download_from_hdfs(hdfs_dir)
-        elif self.remote == 's3':
-            self.s3.get_from_s3(self.filepath, self.filepath, self.filename)
-        else:
-            pass;
+        if download:
+            # Download data if it is in a remote location
+            if self.remote == 'hdfs':
+                self._download_from_hdfs(hdfs_dir)
+            elif self.remote == 's3':
+                self.s3.get_from_s3(self.filepath, self.filepath, self.filename)
+            else:
+                pass;
 
         self._read_or_write(mode='r', data=None)
 

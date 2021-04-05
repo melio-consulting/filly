@@ -199,3 +199,15 @@ def test_read_input():
     tmp = Filly().read_input(filepath='tests/data', filename='tmp')
 
     assert tmp == 'true'
+
+def test_read_data():
+
+    dict1 = pd.DataFrame({
+        "A": [0,0,0],
+        "B": [1,1,1],
+        "C": [2,2,2]
+    })
+
+    filly = Filly(remote='s3', bucket_name='tmp')
+    filly.read_data(filename='test_csv_read.csv', filepath='tests/data', download=False)
+    assert_frame_equal(filly.data, dict1)
