@@ -103,17 +103,15 @@ def test_csv_handler(filename, filepath, fullpath, mode):
         assert_frame_equal(file_handler.data, dict1)
 
 @pytest.mark.parametrize(
-    "filename, filepath, mode",
+    "filename, filepath, fullpath, mode",
     [
-        ('test_pickle.pkl', 'tests/data/', 'w'),
-        pytest.param(
-            'test_pickle_read.pkl',
-            'tests/data/',
-            'r'
-        )
+        ('test_pickle.pkl', 'tests/data/', None,'w'),
+        ('test_pickle_read.pkl', 'tests/data/', None, 'r'),
+        (None, None, 'tests/data/test_pickle.pkl', 'w'),
+        (None, None, 'tests/data/test_pickle_read.pkl', 'r')
     ]
 )
-def test_pickle_handler(filename, filepath, mode):
+def test_pickle_handler(filename, filepath, fullpath, mode):
 
     dict1 = pd.DataFrame({
         "A": [0,0,0],
@@ -127,6 +125,7 @@ def test_pickle_handler(filename, filepath, mode):
             file_handler.write_data(
                 filename=filename,
                 filepath=filepath,
+                fullpath=fullpath,
                 data=dict1
             )
             dict2 = pd.read_csv(open(os.path.join(filepath, filename), 'r'))
@@ -139,7 +138,7 @@ def test_pickle_handler(filename, filepath, mode):
     elif mode == 'r':
 
         file_handler = Filly(remote=None)
-        file_handler.read_data(filename=filename, filepath=filepath)
+        file_handler.read_data(filename=filename, filepath=filepath, fullpath=fullpath)
         assert_frame_equal(file_handler.data, dict1)
 
 @pytest.mark.parametrize(

@@ -74,6 +74,7 @@ class Filly():
         if filename is not None:
             self.filename = filename
             if filepath is not None:
+                self.filepath = filepath
                 self.fullpath = os.path.join(filepath, filename)
 
     def __run_cmd(self, args_list):
@@ -90,8 +91,8 @@ class Filly():
 
         self.__set_path(filepath, filename, fullpath)
 
-        if not os.path.exists(filepath):
-            os.makedirs(filepath, exist_ok=True)
+        if not os.path.exists(self.filepath):
+            os.makedirs(self.filepath, exist_ok=True)
 
         self._read_or_write(mode='w', data=data)
 
