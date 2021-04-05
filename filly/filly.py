@@ -99,7 +99,7 @@ class Filly():
         if self.remote == 'hdfs':
             self._upload_to_hdfs(hdfs_dir)
         elif self.remote == 's3':
-            self.s3.put_to_s3(filepath, filepath, filename)
+            self.s3.put_to_s3(self.filepath, self.filepath, self.filename)
         elif self.remote is None:
             pass
         else:
@@ -113,7 +113,7 @@ class Filly():
         if self.remote == 'hdfs':
             self._download_from_hdfs(hdfs_dir)
         elif self.remote == 's3':
-            self.s3.get_from_s3(filepath, filepath, filename)
+            self.s3.get_from_s3(self.filepath, self.filepath, self.filename)
         else:
             pass;
 
