@@ -31,26 +31,20 @@ class FileUploadError(Exception):
 class Filly():
     """A class to read and write various data types"""
 
-    def __init__(self, filename=None, filepath='./', data=None, remote=None, bucket_name=None):
+    def __init__(self, remote=None, bucket_name=None):
         """Class to handle the reading, writing, transpose and syncing of various file types
 
         Arguments:
             filename (str): filename, without the file path
-            filepath (str): filepath, without the actual filename
-            mode (str): default to None, available options are
-                - r: read data from filepath, filename. If this mode is set, the
-                    data can be accessed via the normal accessor as Filly.data
-                - w: write data to filepath, filename. If this mode is set, the
-                    data must also be supplied when instantiating the object
-                - None: an object holding just the file path and name
-            data ([dict, pd.DataFrame]): data to be written or transposed. Only need to be
-                provided if mode is "w"
             remote (str): default to None. If supplied, the data will be uploaded to
-                the associated remote directory under the given filename
+                the associated remote directory under the given filename. Only `s3` and `hdfs`
+                are supported at the moment.
+            bucket_name (str): s3 bucket name if the remote location is set as s3.
 
         Attributes:
             logger (logging.Logger): class logger
             filename (str): filename, without the filepath
+            filepath (str): filepath, without the actual filename
             fullpath (str): full file path plus the file name
             data ([dict, pd.DataFrame]): the read data if mode is "r", otherwise not available
             s3 (s3.S3): the S3 class that handles s3 up/downloading
@@ -60,13 +54,12 @@ class Filly():
         """
 
         self.logger = logging.getLogger('filly')
-        self.__set_path(filepath, filename)
         self.remote = remote
 
-        if remote not in ['s3', 'hdfs', None]:
-            raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
+        if self.remote not in ['s3', 'hdfs', None]:
+            raise ValueError(f'Invalid remote {self.remote}. Only `hdfs` or `s3` are supported.')
 
-        if remote == 's3':
+        if self.remote == 's3':
             if bucket_name not in [None, '']:
                 self.s3 = S3(bucket=bucket_name)
             else:
@@ -102,14 +95,14 @@ class Filly():
 
         self._read_or_write(mode='w', data=data)
 
-        if remote == 'hdfs':
+        if self.remote == 'hdfs':
             self._upload_to_hdfs(hdfs_dir)
-        elif remote == 's3':
+        elif self.remote == 's3':
             self.s3.put_to_s3(filepath, filepath, filename)
-        elif remote is None:
+        elif self.remote is None:
             pass
         else:
-            raise ValueError(f'Invalid remote {remote}. Only `hdfs` or `s3` are supported.')
+            raise ValueError(f'Invalid remote {self.remote}. Only `hdfs` or `s3` are supported.')
 
     def read_data(self, filepath=None, filename=None, fullpath=None):
 
@@ -155,8 +148,19 @@ class Filly():
         else:
             self.logger.info(f'File {self.fullpath} downloaded successfully from {hdfs_dir}.')
 
-    def _read_or_write(self, mode, data):
-        """Define file handler to read or write the data based on input mode"""
+    def _read_or_write(self, mode, data=None):
+        """Wrapper to decide how to read/write the file based on file type
+
+        Parameters
+        ----------
+        mode (str): default to None, available options are
+            - r: read data from filepath, filename. If this mode is set, the
+                data can be accessed via the normal accessor as Filly.data
+            - w: write data to filepath, filename. If this mode is set, the
+                data must also be supplied when instantiating the object
+        data (dict, pd.DataFrame):
+            data to be written. Only need to be supplied when mode='w'
+        """
 
         file_extension = Path(self.filename).suffix
 

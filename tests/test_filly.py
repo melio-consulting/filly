@@ -64,14 +64,6 @@ def test_remote(remote, bucket_name):
             bucket_name=bucket_name
         )
 
-def test_read_or_write():
-    with pytest.raises(TypeError):
-        Filly(
-            filename='test_json_read2.parquet',
-            filepath='tests/data/',
-            mode='r'
-        )
-
 @pytest.mark.parametrize(
     "filename, filepath, fullpath, mode",
     [
